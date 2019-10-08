@@ -2,24 +2,35 @@ class AMainPlayer : APawn
 {
     UPROPERTY(DefaultComponent, RootComponent)
     UBoxComponent BoxCollision;
+    default BoxCollision.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    default BoxCollision.SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 
     UPROPERTY(DefaultComponent, Attach = BoxCollision)
     UStaticMeshComponent MeshComp;
+    default MeshComp.SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 
     UPROPERTY(DefaultComponent)
     UInputComponent InputComp;
 
+    UPROPERTY(DefaultComponent)
+    UFloatingPawnMovement FloatingPawnMovement;
+
     UPROPERTY(DefaultComponent, Attach = BoxCollision)
     USpringArmComponent SpringArm;
-    default SpringArm.TargetArmLength = 1000;  
+    default SpringArm.TargetArmLength = 1250;  
 
     UPROPERTY(DefaultComponent, Attach = SpringArm)
     UCameraComponent MainCamera;
 
+
+
+    UPROPERTY()
+    float MovementSpeed;
+
     UFUNCTION(BlueprintOverride)
     void ConstructionScript()
     {
-        SpringArm.SetRelativeRotation(FRotator(-30, 0, 0));
+        SpringArm.SetRelativeRotation(FRotator(-25, 0, 0));
     }
 
     UFUNCTION(BlueprintOverride)
@@ -32,7 +43,7 @@ class AMainPlayer : APawn
     UFUNCTION(BlueprintOverride)
     void Tick(float DeltaSeconds) 
     {
-        
+
     }
 
     UFUNCTION()
@@ -44,6 +55,8 @@ class AMainPlayer : APawn
     UFUNCTION()
     void MoveSides(float AxisValue)
     {
-        AddMovementInput(ControlRotation.RightVector, AxisValue);
+        AddMovementInput(ControlRotation.RightVector, AxisValue * MovementSpeed, true);
+        // Print("Axis Value = " + AxisValue, 1);
     }
+
 } 
