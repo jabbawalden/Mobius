@@ -1,5 +1,10 @@
+import AMobiusGameMode;
+
 class AObstacle : AActor 
 {
+    UPROPERTY()
+    AMobiusGameMode GameMode;
+
     UPROPERTY(DefaultComponent, RootComponent)
     UBoxComponent BoxCollision;
     default BoxCollision.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -10,12 +15,13 @@ class AObstacle : AActor
     default MeshComp.SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 
     UPROPERTY()
-    float MovementSpeed = 3000;
+    float MovementSpeed = 3000; //GameMode.GlobalMovementSpeed;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
-
+        GameMode = Cast<AMobiusGameMode>(Gameplay::GetGameMode());
+        MovementSpeed = GameMode.GlobalMovementSpeed;
     }
 
     UFUNCTION(BlueprintOverride)

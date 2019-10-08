@@ -1,3 +1,5 @@
+import AMobiusGameMode;
+
 class ALevelGeneratorV2 : AActor 
 {
     UPROPERTY(DefaultComponent, RootComponent)
@@ -5,6 +7,9 @@ class ALevelGeneratorV2 : AActor
 
     UPROPERTY(DefaultComponent, Attach = SceneComp)
     UBoxComponent BoxCollision;
+
+    UPROPERTY()
+    AMobiusGameMode GameMode;
 
     UPROPERTY(DefaultComponent, Attach = BoxCollision)
     UStaticMeshComponent MeshComp;
@@ -35,7 +40,7 @@ class ALevelGeneratorV2 : AActor
     AActor PointRepresent;
 
     UPROPERTY()
-    float MovementSpeed = 3000;
+    float MovementSpeed = 3000; //AMobiusGameMode.GlobalMovementSpeed;
 
     float PointReferenceX;
     float PointReferenceY;
@@ -46,22 +51,22 @@ class ALevelGeneratorV2 : AActor
     float XPositionMultiplier = 100;
     float YPositionMultiplier = 80;
 
-    UFUNCTION(BlueprintOverride)
-    void ConstructionScript()
-    {
+    int MaxSpawnCount = 60;
+    int MinSpawnCount = 30;
+    int TargetSpawnCount;
+    int CurrentSpawnCount;
 
-    }
-
     UFUNCTION(BlueprintOverride)
-    void BeginPlay()
+    void BeginPlay() 
     {
-        Print("New Level Generated", 5);
+        Print("Level Generated", 5);
+
         SpawnTriggerComp.OnComponentBeginOverlap.AddUFunction(this, n"TriggerOnBeginOverlap");
         ConstructObstaclePositions();
         SpawnObstacles();
-        // Print(" " + PointReferenceX, 5);
-        //LevelGenerator = SpawnActor(LevelGeneratorType, SpawnLoc.GetWorldLocation()); 
-        //PointRepresent = SpawnActor(PointRepresentType);
+
+        GameMode = Cast<AMobiusGameMode>(Gameplay::GetGameMode());
+        MovementSpeed = GameMode.GlobalMovementSpeed;
     }
 
     UFUNCTION(BlueprintOverride)
@@ -128,7 +133,9 @@ class ALevelGeneratorV2 : AActor
     UFUNCTION()
     void SpawnObstacles() 
     {
-        Print("Call Spawn Actors", 5);
+        TargetSpawnCount = FMath::RandRange(MinSpawnCount, MaxSpawnCount);
+        
+        Print("Target Spawn Count Is: " + TargetSpawnCount, 5);
         for(int x = 0; x < LocationPointX.Num(); x++)
         {
             float XLocation = LocationPointX[x];
