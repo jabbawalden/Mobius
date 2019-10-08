@@ -12,8 +12,15 @@ class AMainPlayer : APawn
     UPROPERTY(DefaultComponent)
     UInputComponent InputComp;
 
+    UPROPERTY()
+    float MovementSpeed = 3000;
+
     UPROPERTY(DefaultComponent)
     UFloatingPawnMovement FloatingPawnMovement;
+    default FloatingPawnMovement.MaxSpeed = MovementSpeed;
+    default FloatingPawnMovement.Acceleration = MovementSpeed * 10;
+    default FloatingPawnMovement.Deceleration = MovementSpeed * 10;
+
 
     UPROPERTY(DefaultComponent, Attach = BoxCollision)
     USpringArmComponent SpringArm;
@@ -23,9 +30,6 @@ class AMainPlayer : APawn
     UCameraComponent MainCamera;
 
 
-
-    UPROPERTY()
-    float MovementSpeed;
 
     UFUNCTION(BlueprintOverride)
     void ConstructionScript()

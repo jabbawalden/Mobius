@@ -1,6 +1,13 @@
 class AMobiusGameMode : AGameModeBase
 {
-    float GlobalMovementSpeed = 3500;
+    float GlobalMovementSpeed = 4900;
+
+    bool GameStarted = false;
+
+    UPROPERTY()
+    TArray<AActor> SpawnedLevels;
+
+    //when array is above 2, delete the first element and remove from array
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()

@@ -40,6 +40,10 @@ class ALevelGeneratorV2 : AActor
     AActor PointRepresent;
 
     UPROPERTY()
+    TSubclassOf<AActor> ObstacleType;
+    AActor Obstacle;
+
+    UPROPERTY()
     float MovementSpeed = 3000; //AMobiusGameMode.GlobalMovementSpeed;
 
     float PointReferenceX;
@@ -51,22 +55,33 @@ class ALevelGeneratorV2 : AActor
     float XPositionMultiplier = 100;
     float YPositionMultiplier = 80;
 
-    int MaxSpawnCount = 60;
-    int MinSpawnCount = 30;
-    int TargetSpawnCount;
-    int CurrentSpawnCount;
+    int XMaxCount;
+    int XMinCount;
+    int XTargetCount;
+    int XCurrentSpawnCount;
+
+    //Left to Right Rows
+    UPROPERTY()
+    TArray<float> ChosenYIndex;
+    //Forward Rows
+    UPROPERTY()
+    TArray<float> ChosenXIndex;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay() 
     {
         Print("Level Generated", 5);
 
+        XMaxCount = 15;
+        XMinCount = 10;
+
         SpawnTriggerComp.OnComponentBeginOverlap.AddUFunction(this, n"TriggerOnBeginOverlap");
-        ConstructObstaclePositions();
-        SpawnObstacles();
 
         GameMode = Cast<AMobiusGameMode>(Gameplay::GetGameMode());
         MovementSpeed = GameMode.GlobalMovementSpeed;
+
+        ConstructObstaclePositions();
+        GenerateObstacles();
     }
 
     UFUNCTION(BlueprintOverride)
@@ -92,8 +107,7 @@ class ALevelGeneratorV2 : AActor
     {
         // Print("Overlapping with: " + OtherActor.Name, 5);
         SpawnNextLevel();
-        //SpawnObstacles();
-        Print("Overlapping", 5);
+        //GenerateObstacles();
     }
 
     
@@ -101,7 +115,6 @@ class ALevelGeneratorV2 : AActor
     void SpawnNextLevel() 
     {
         LevelGenerator = SpawnActor(LevelGeneratorType, SpawnLoc.GetWorldLocation()); 
-        Print("Level Spawn Called", 5);
     }
 
     UFUNCTION() 
@@ -115,6 +128,16 @@ class ALevelGeneratorV2 : AActor
 
         float XPos = -AddAmountX * XPositionMultiplier;
         float YPos = -AddAmountY * YPositionMultiplier * 3.1f;
+
+        if (GameMode.GameStarted)
+        {
+            XPos += MeshComp.GetWorldScale().X * 50;
+        }
+
+        if (!GameMode.GameStarted)
+        {
+            GameMode.GameStarted = true;
+        }
 
         for (int i = 0; i < PointReferenceX; i++)
         {
@@ -131,11 +154,79 @@ class ALevelGeneratorV2 : AActor
     }
 
     UFUNCTION()
-    void SpawnObstacles() 
+    void SelectSpawnLocations()
     {
-        TargetSpawnCount = FMath::RandRange(MinSpawnCount, MaxSpawnCount);
+        //TO FIX - ENSURE THAT ROWS CANNOT EXCEED ROW 24
+        XTargetCount = FMath::RandRange(XMinCount, XMaxCount);
         
-        Print("Target Spawn Count Is: " + TargetSpawnCount, 5);
+        int RowDivision = LocationPointX.Num() / XTargetCount;
+        int RowChosenIndex = -1;
+        int RowAfterRandomized = 0;
+        // Print(" " + RowDivision, 5);
+
+        for (int i = 0; i < XTargetCount; i++)
+        {
+            if (i <= LocationPointX.Num() - 1) 
+            {
+                if (i == RowAfterRandomized)
+                {
+                    RowChosenIndex += RowDivision;
+                }
+                else 
+                {
+                    int r = FMath::RandRange(0, 3);
+
+                    if(r == 0)
+                    {
+                        RowChosenIndex += RowDivision;
+                    }
+                    else
+                    {
+                        RowChosenIndex += RowDivision + FMath::RandRange(-1, 1);
+                        RowAfterRandomized = RowChosenIndex + 1;
+                    }
+                }
+            
+            ChosenXIndex.Add(RowChosenIndex);
+            
+            }
+            else 
+            {
+                Print("We exceeded our row amount ", 5);
+            }
+
+
+        }
+
+        int YPreviousLoc = 0;
+        int YCurrentLoc = 0;
+
+        // Print("ChosenXIndex is this large: " + ChosenXIndex.Num(), 10);
+
+        for (int y = 0; y < ChosenXIndex.Num(); y++)
+        {
+            YCurrentLoc = FMath::RandRange(0, 3);
+
+            if (YCurrentLoc == YPreviousLoc)
+            {
+                YCurrentLoc = FMath::RandRange(0, 3);
+            }
+            else 
+            {
+                YPreviousLoc = YCurrentLoc;
+            }
+
+            ChosenYIndex.Add(YCurrentLoc);
+        }
+    }
+
+    UFUNCTION()
+    void GenerateObstacles() 
+    {
+
+        SelectSpawnLocations();
+        //Show spawn points
+
         for(int x = 0; x < LocationPointX.Num(); x++)
         {
             float XLocation = LocationPointX[x];
@@ -146,6 +237,11 @@ class ALevelGeneratorV2 : AActor
             }
 
             NumberOfSpawn++;
+        }
+
+        for (int i = 0; i < ChosenXIndex.Num(); i++)
+        {
+            Obstacle = SpawnActor(ObstacleType, FVector(LocationPointX[ChosenXIndex[i]], LocationPointY[ChosenYIndex[i]] , 150));
         }
 
     }
